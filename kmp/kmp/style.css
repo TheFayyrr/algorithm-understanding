@@ -1,0 +1,30 @@
+#kmp-animated-lesson { color: var(--foreground); }
+    #kmp-animated-lesson .lesson-heading { margin-bottom: 1rem; padding-right: 90px; }
+    #kmp-animated-lesson .lesson-values { display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; margin: 1rem 0; }
+    #kmp-animated-lesson .track { margin: .7rem 0; }
+    #kmp-animated-lesson .track-label { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; margin-bottom: .3rem; }
+    #kmp-animated-lesson .pointer-zone { position: relative; height: 1.8em; }
+    #kmp-animated-lesson .pointer { position: absolute; text-align: center; transition: left 650ms ease; font-weight: 500; }
+    #kmp-animated-lesson .rail { position: relative; min-height: 4.1em; }
+    #kmp-animated-lesson .belt { position: absolute; left: 0; top: 0; display: grid; gap: 0; transition: left 650ms ease; }
+    #kmp-animated-lesson .slot { display: flex; flex-direction: column; align-items: center; gap: .25rem; min-width: 0; padding: .35rem 0; }
+    #kmp-animated-lesson .slot-index { color: var(--muted-foreground); }
+    #kmp-animated-lesson .slot-char { font-family: monospace; font-weight: 500; }
+    #kmp-animated-lesson .is-current { background: color-mix(in srgb, var(--viz-series-1) 18%, transparent); }
+    #kmp-animated-lesson .is-kept { background: color-mix(in srgb, var(--viz-series-2) 18%, transparent); }
+    #kmp-animated-lesson .is-unwritten { opacity: .5; }
+    #kmp-animated-lesson .is-future { opacity: .45; }
+    #kmp-animated-lesson .next-area { margin: 1rem 0; }
+    #kmp-animated-lesson .next-label { margin-bottom: .3rem; }
+    #kmp-animated-lesson .next-cells { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    #kmp-animated-lesson .lesson-detail { min-height: 3em; margin: .75rem 0; overflow-wrap: anywhere; }
+    #kmp-animated-lesson .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; margin: .75rem 0; }
+    #kmp-animated-lesson .legend-item { display: inline-flex; gap: .4rem; align-items: center; }
+    #kmp-animated-lesson .swatch { width: .75rem; height: .75rem; }
+    #kmp-animated-lesson .compare-swatch { background: var(--viz-series-1); }
+    #kmp-animated-lesson .kept-swatch { background: var(--viz-series-2); }
+    #kmp-animated-lesson .controls { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    #kmp-animated-lesson .step-count { margin-left: .25rem; }
+    @media (prefers-reduced-motion: reduce) {
+      #kmp-animated-lesson .pointer, #kmp-animated-lesson .belt { transition: none; }
+    }
