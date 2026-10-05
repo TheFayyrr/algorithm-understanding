@@ -1,97 +1,59 @@
-# 算法理解
+# KMP 算法动画
 
-通过网页动画观察算法中的比较、指针移动和状态变化。每个算法独立一个文件夹，先理解过程，再阅读代码。
+打开 [index.html](index.html)，先播放“生成 next 数组”，再切换到“KMP 字符串匹配”。
 
-首版包含 **KMP 字符串匹配**，保留两段演示：生成 `next` 数组、利用 `next` 匹配文本。
+## 本项目采用的约定
 
-## 开始使用
+只采用**前缀表不减一**的版本：
 
-下载或克隆仓库后，直接用浏览器打开根目录的 `index.html`，再进入 KMP 动画。
-
-也可以直接打开 `kmp/index.html`。页面使用 HTML、CSS 和原生 JavaScript，无需安装依赖、编译或启动后端；所有页面资源均保存在仓库内，可以离线使用。
-
-```bash
-git clone https://github.com/TheFayyrr/algorithm-understanding.git
-cd algorithm-understanding
-```
-
-若希望通过本地网址访问，可运行：
-
-```bash
-python3 -m http.server 8000
-```
-
-然后打开 `http://localhost:8000/`。
-
-## 当前算法
-
-| 算法 | 网页入口 | 学习内容 | 示例代码 |
-| --- | --- | --- | --- |
-| KMP | [kmp/index.html](kmp/index.html) | 前后缀、next 数组、i/j、失配回退 | [C++](kmp/kmp.cpp) / [JavaScript](kmp/algorithm.js) |
-
-KMP 默认例子：
-
-- 模式串：`aabaaf`。
-- 前缀表：`[0, 1, 0, 1, 2, 0]`。
-- 文本串：`aabaabaaf`。
-- 首次匹配位置：`3`，下标从 `0` 开始。
-
-点击“播放”自动播放；点击“暂停”后，可用“上一步”和“下一步”逐步观察。播放结束后可以重播。切换演示阶段会暂停并回到该阶段开头。
-
-## 文件组织
-
-| 路径 | 用途 |
+| 项目 | 约定 |
 | --- | --- |
-| `index.html` | 算法目录首页 |
-| `assets/base.css` | 页面公共样式、浅色与深色主题 |
-| `kmp/index.html` | KMP 网页入口 |
-| `kmp/style.css` | KMP 动画布局与移动效果 |
-| `kmp/algorithm.js` | 算法、前缀表与动画状态生成，独立于界面 |
-| `kmp/app.js` | 播放、暂停、前后步与画面更新 |
-| `kmp/algorithm.test.js` | 算法正确性与动画状态检查 |
-| `kmp/app.test.js` | 动画控件和阶段切换检查 |
-| `kmp/kmp.cpp` | 与动画约定一致的 C++ 实现 |
-| `kmp/README.md` | KMP 的变量约定和阅读说明 |
-| `CONTRIBUTING.md` | 新算法目录和贡献约定 |
-| `LICENSE` | MIT 许可证 |
+| 下标 | 从 `0` 开始 |
+| `next[i]` | `P[0…i]` 的最长相等真前后缀长度 |
+| 初始状态 | `j = 0`，`next[0] = 0` |
+| 计算 next 时比较 | `P[i]` 与 `P[j]` |
+| 失配回退 | `j = next[j - 1]` |
+| 相同 | `j` 增加 `1` |
 
-## 运行检查
+真前缀、真后缀排除字符串自身，允许重叠。例如 `aaa` 的最长相等前后缀是 `aa`，长度为 `2`。
 
-使用 Node.js 18 或更高版本，无需 `npm install`：
+## i 和 j
 
-```bash
-node --test kmp/algorithm.test.js kmp/app.test.js
-```
+生成 `next` 时：
 
-编译 C++ 示例：
+- `i` 是当前要处理的模式串字符位置。
+- 比较前的 `j` 是候选相等前后缀长度，也是前缀中下一待比较字符的位置。
+- 在“延长”和“写入”步骤，`j` 已经更新为当前这一截的相等前后缀长度。
 
-```bash
-g++ -std=c++17 -Wall -Wextra -pedantic kmp/kmp.cpp -o kmp-demo
-./kmp-demo
-```
+匹配文本时：
 
-## 发布为在线网页
+- `i` 指向下一待比较的文本字符。
+- `j` 是已匹配长度，也指向模式串下一待比较字符。
+- 失配且 `j > 0` 时，`i` 保持不动，回退 `j` 后继续比较同一个文本字符。
 
-仓库是可直接发布的静态网站。GitHub Pages 可使用 `main` 分支的根目录：
+模式串 `aabaaf` 的前缀表是 `[0, 1, 0, 1, 2, 0]`。生成最后一个值时，处理字符 `f`，`i` 保持为 `5`，`j` 从 `2` 回退到 `1`，再回退到 `0`。
 
-1. 打开仓库的 **Settings → Pages**。
-2. 在 **Build and deployment** 中选择 **Deploy from a branch**。
-3. 选择 **main** 和 **/ (root)**，然后保存。
-4. 等待部署完成，从 Pages 页面打开实际生成的地址。
+## 为什么下一步读取 next[j - 1]
 
-`.nojekyll` 用于按静态文件发布。部署说明参考 [GitHub 官方文档](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)。
+长度为 `j` 的候选对应 `P[0…j-1]`。当前候选不能继续扩展时，读取这个候选自身的最长相等前后缀长度，即 `next[j-1]`。
 
-## 后续扩展规划
+例如候选 `aa` 长度为 `2`，下一候选是 `a`，长度为 `next[1] = 1`；再下一候选是空串，长度为 `next[0] = 0`。
 
-以下是后续方向，目前尚未实现：
+## 匹配成功时的 i
 
-1. 二分查找：观察左右边界和中点如何变化。
-2. 双指针：观察左右指针和判断条件。
-3. 滑动窗口：观察窗口扩张、收缩和当前统计值。
-4. 排序：观察元素比较、交换与已完成区间。
+动画和 `kmp.cpp` 都在处理当前文本字符后先前进 `i`，再检查是否匹配成功。因此最终 `i = 9`、`j = 6`，起始下标为 `i - j = 3`。
 
-每次新增算法都独立建立文件夹，提供网页动画、变量说明、代码示例和正确性检查，并在首页添加入口。
+有些 `for` 循环版本在前进 `i` 之前检查成功，此时最后一个字符的下标为 `8`，返回 `i - 模式串长度 + 1`，结果同样为 `3`。
 
-## 许可证
+不要将本项目的约定与 `j = -1`、前缀表统一减一的版本混用。
 
-[MIT](LICENSE)。欢迎使用、修改和贡献。
+## 算法与界面分离
+
+- `algorithm.js` 提供 `getNext`、`findFirst`、`buildPrefixSteps`、`buildSearchSteps`。
+- `app.js` 读取状态序列，更新字符、指针、前后缀高亮和 next 数组。
+- `style.css` 控制移动动画，并尊重系统的“减少动态效果”设置。
+- 测试将 KMP 结果与独立的朴素匹配结果比较，并检查示例中失配回退和最终位置。
+
+`getNext` 时间复杂度为 `O(m)`；`findFirst` 时间复杂度为 `O(n+m)`，额外空间为 `O(m)`。动画状态序列额外保存教学过程，不属于算法本身的空间开销。
+
+默认演示使用 ASCII 字符。JavaScript 的字符串下标按 UTF-16 代码单元计算；C++ 示例按字节计算。
