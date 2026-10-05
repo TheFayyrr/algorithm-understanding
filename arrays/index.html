@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="从连续内存、下标访问开始，学习数组增删和常用标准库接口。">
+  <title>数组与 vector 基础 · 算法理解</title>
+  <link rel="stylesheet" href="../assets/base.css">
+  <link rel="stylesheet" href="../assets/learning.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="site-brand" href="../index.html">算法理解</a>
+    <nav aria-label="项目导航"><a href="../index.html">学习目录</a><a href="https://github.com/TheFayyrr/algorithm-understanding/tree/main/arrays">本章源码</a></nav>
+  </header>
+  <main class="container">
+    <h1>数组与 vector 基础</h1>
+    <p class="intro">从连续内存、下标访问开始，学习数组增删和常用标准库接口。</p>
+    <article class="learning-notes">
+<p><a href="../index.html">返回学习目录</a> · <a href="index.html">浏览器阅读</a> · <a href="arrays.cpp">可运行 C++ 示例</a> · <a href="../linked-list/index.html">接着学习链表</a></p>
+<p>数组按照位置访问元素；链表沿着指针访问节点。先理解两者怎样保存数据，再学习增删操作。</p>
+<h2>1. 数组如何保存数据</h2>
+<p>数组是相同类型元素的集合，元素位于连续的内存空间中。这里的连续指程序可见的地址连续。</p>
+<pre><code class="language-cpp">int a[4] = {10, 20, 30, 40};
+a[0];      // 10：读取第一个元素
+a[2] = 99; // 修改第三个元素
+</code></pre>
+<p>下标从 0 开始。长度为 4，合法下标为 0、1、2、3，访问 <code>a[4]</code> 就越界了。</p>
+<p>程序根据起始地址、下标和每个元素的大小计算位置，所以访问 <code>a[i]</code> 不需要先走过前面的元素，时间为 O(1)。</p>
+<p>假设这个环境中 <code>sizeof(int) == 4</code>，地址可以示意为：</p>
+<table>
+<thead>
+<tr>
+<th>下标</th>
+<th>值</th>
+<th>示意地址</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>10</td>
+<td>0x1000</td>
+</tr>
+<tr>
+<td>1</td>
+<td>20</td>
+<td>0x1004</td>
+</tr>
+<tr>
+<td>2</td>
+<td>30</td>
+<td>0x1008</td>
+</tr>
+<tr>
+<td>3</td>
+<td>40</td>
+<td>0x100C</td>
+</tr>
+</tbody></table>
+<p>实际大小用 <code>sizeof(int)</code> 获取，不能把 4 字节当成所有环境都必须满足的规定。<code>0x</code> 表示十六进制，<code>C</code> 表示十进制的 12。</p>
+<h2>2. 原生数组、array、vector</h2>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>例子</th>
+<th>元素数量是否能改变</th>
+<th>所需头文件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原生数组</td>
+<td><code>int a[3] = {1, 2, 3};</code></td>
+<td>这个数组对象的长度固定</td>
+<td>无</td>
+</tr>
+<tr>
+<td><code>std::array</code></td>
+<td><code>std::array&lt;int, 3&gt; a{1, 2, 3};</code></td>
+<td>固定，有标准库接口</td>
+<td><code>&lt;array&gt;</code></td>
+</tr>
+<tr>
+<td><code>std::vector</code></td>
+<td><code>std::vector&lt;int&gt; v{1, 2, 3};</code></td>
+<td>可以动态增删</td>
+<td><code>&lt;vector&gt;</code></td>
+</tr>
+</tbody></table>
+<p>可以把 <code>vector&lt;int&gt;</code> 理解为标准库管理的动态数组。它保存的 int 元素连续，扩容时可能分配更大的存储区并移动元素。它不是以 <code>std::array</code> 作为底层容器。</p>
+<p>不要把这里对 <code>vector&lt;int&gt;</code> 的描述直接套到特殊化的 <code>vector&lt;bool&gt;</code>。</p>
+<h2>3. 原生数组怎样“删除”元素</h2>
+<p>原生数组本身没有删除成员函数。常用做法是把后面的内容向前覆盖，并减少自己记录的有效长度。</p>
+<pre><code class="language-cpp">int a[4] = {10, 20, 30, 40};
+int len = 4;
+
+// 删除下标 1 的元素 20
+for (int i = 1; i &lt; len - 1; ++i) {
+    a[i] = a[i + 1];
+}
+--len;
+
+// 只把前 len 个元素视为有效：10、30、40
+// 原数组仍然有 4 个存储位置
+</code></pre>
+<p>移动的是元素的内容，原数组的存储位置没有因此改变。删除中间元素时，要保持原有顺序，通常需要移动后续元素，时间为 O(n)。</p>
+<h2>4. vector 常用接口</h2>
+<pre><code class="language-cpp">#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+
+std::vector&lt;int&gt; v{10, 20, 30};
+v.push_back(40);        // 10、20、30、40
+v.pop_back();           // 10、20、30
+v.insert(v.begin(), 5); // 5、10、20、30
+v.erase(v.begin() + 1); // 5、20、30
+std::sort(v.begin(), v.end());
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>含义</th>
+<th>注意</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>v[i]</code></td>
+<td>访问下标 i</td>
+<td>要自己保证下标合法</td>
+</tr>
+<tr>
+<td><code>v.at(i)</code></td>
+<td>访问下标 i</td>
+<td>越界会抛出异常</td>
+</tr>
+<tr>
+<td><code>v.front()</code></td>
+<td>访问第一个元素</td>
+<td>要非空，不删除</td>
+</tr>
+<tr>
+<td><code>v.back()</code></td>
+<td>访问最后一个元素</td>
+<td>要非空，不删除</td>
+</tr>
+<tr>
+<td><code>v.push_back(x)</code></td>
+<td>尾部添加 x</td>
+<td>均摊 O(1)，扩容的一次可能是 O(n)</td>
+</tr>
+<tr>
+<td><code>v.pop_back()</code></td>
+<td>删除最后一个元素</td>
+<td>要非空，不返回被删的值</td>
+</tr>
+<tr>
+<td><code>v.insert(it, x)</code></td>
+<td>在 it 之前插入 x</td>
+<td>中间插入通常 O(n)</td>
+</tr>
+<tr>
+<td><code>v.erase(it)</code></td>
+<td>删除 it 指向的元素</td>
+<td>中间删除通常 O(n)</td>
+</tr>
+<tr>
+<td><code>v.size()</code></td>
+<td>元素数量</td>
+<td>不是内存字节数</td>
+</tr>
+<tr>
+<td><code>v.empty()</code></td>
+<td>判断是否为空</td>
+<td>不会清空容器</td>
+</tr>
+<tr>
+<td><code>v.clear()</code></td>
+<td>删除全部元素</td>
+<td>size 变为 0，不保证释放容量</td>
+</tr>
+<tr>
+<td><code>v.resize(n)</code></td>
+<td>将元素数量改成 n</td>
+<td>改变 size</td>
+</tr>
+<tr>
+<td><code>v.reserve(n)</code></td>
+<td>预留至少 n 个元素的容量</td>
+<td>不增加元素，不改变 size</td>
+</tr>
+<tr>
+<td><code>v.capacity()</code></td>
+<td>当前容量</td>
+<td>可能大于 size</td>
+</tr>
+<tr>
+<td><code>v.begin()</code></td>
+<td>第一个元素的迭代器</td>
+<td>空容器中等于 end</td>
+</tr>
+<tr>
+<td><code>v.end()</code></td>
+<td>最后一个元素之后的位置</td>
+<td>不能解引用</td>
+</tr>
+<tr>
+<td><code>v.data()</code></td>
+<td>指向元素存储区的指针</td>
+<td>仍要保证访问范围合法</td>
+</tr>
+</tbody></table>
+<pre><code class="language-cpp">std::vector&lt;int&gt; v;
+v.reserve(100); // size 仍为 0，不能因为预留了容量就访问 v[0]
+v.resize(3);    // 现在有 3 个 int，初始值为 0
+</code></pre>
+<p>扩容可能使原有指针、引用和迭代器失效。初学时，增删后需要重新定位元素，避免继续使用已经失效的迭代器。</p>
+<h2>5. 迭代器与遍历</h2>
+<p>迭代器是用于定位、访问、遍历容器元素的工具。可以先把它理解为“记录当前访问位置”。</p>
+<pre><code class="language-cpp">for (int x : v) {
+    std::cout &lt;&lt; x &lt;&lt; &#39; &#39;;
+}
+
+for (auto it = v.begin(); it != v.end(); ++it) {
+    std::cout &lt;&lt; *it &lt;&lt; &#39; &#39;;
+}
+</code></pre>
+<p><code>*it</code> 读取当前位置的元素。<code>++it</code> 前进到下一个位置。使用 <code>std::cout</code> 需要 <code>&lt;iostream&gt;</code>。</p>
+<h2>6. algorithm 头文件里的常用函数</h2>
+<p>这些函数不是 vector 的成员函数，要写 <code>std::sort(...)</code>，不能写 <code>v.sort()</code>。</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>std::sort(v.begin(), v.end())</code></td>
+<td>升序排序</td>
+</tr>
+<tr>
+<td><code>std::reverse(v.begin(), v.end())</code></td>
+<td>反转顺序</td>
+</tr>
+<tr>
+<td><code>std::find(v.begin(), v.end(), x)</code></td>
+<td>找 x，没找到返回 v.end()</td>
+</tr>
+<tr>
+<td><code>std::max_element(v.begin(), v.end())</code></td>
+<td>返回最大元素的迭代器</td>
+</tr>
+<tr>
+<td><code>std::min_element(v.begin(), v.end())</code></td>
+<td>返回最小元素的迭代器</td>
+</tr>
+<tr>
+<td><code>std::fill(v.begin(), v.end(), x)</code></td>
+<td>将范围内所有元素改为 x</td>
+</tr>
+</tbody></table>
+<p>空容器的 <code>max_element</code>、<code>min_element</code> 会返回 end，不能直接对其结果解引用。</p>
+<h2>7. 二维数组是不是连续的</h2>
+<pre><code class="language-cpp">int a[2][3] = {{0, 1, 2}, {3, 4, 5}};
+</code></pre>
+<p>这种原生二维数组按行连续存放：先是第一行的三个元素，然后是第二行的三个元素。<code>a[1][0]</code> 表示第二行、第一个元素。</p>
+<pre><code class="language-cpp">std::vector&lt;std::vector&lt;int&gt;&gt; rows(2, std::vector&lt;int&gt;(3));
+</code></pre>
+<p>这个写法中，每一行分别是一个 vector，每一行的 int 连续；不同的行不保证共用一整块连续的元素存储区。</p>
+<h2>8. 常见代码符号</h2>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>#include &lt;vector&gt;</code></td>
+<td>引入 vector 的声明</td>
+</tr>
+<tr>
+<td><code>std::</code></td>
+<td>访问标准库命名空间中的名字</td>
+</tr>
+<tr>
+<td><code>&lt;int&gt;</code></td>
+<td>容器中保存 int 类型</td>
+</tr>
+<tr>
+<td><code>v[i]</code></td>
+<td>按下标访问</td>
+</tr>
+<tr>
+<td><code>&amp;a[i]</code></td>
+<td>获取这个元素的地址</td>
+</tr>
+<tr>
+<td><code>sizeof(int)</code></td>
+<td>int 类型占多少字节</td>
+</tr>
+<tr>
+<td><code>auto</code></td>
+<td>由编译器推导变量类型</td>
+</tr>
+<tr>
+<td><code>++i</code></td>
+<td>将 i 增加 1</td>
+</tr>
+</tbody></table>
+<p>在原生数组定义所在的作用域，可以用 <code>sizeof(a) / sizeof(a[0])</code> 算元素数量；数组作为普通数组形参传入函数时通常退化为指针，不能再照搬这个公式。</p>
+<h2>9. 数组和链表的性能区别</h2>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>数组／vector</th>
+<th>单链表</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>访问第 i 个元素</td>
+<td>O(1)</td>
+<td>通常 O(n)</td>
+</tr>
+<tr>
+<td>无序数据中找某个值</td>
+<td>通常 O(n)</td>
+<td>通常 O(n)</td>
+</tr>
+<tr>
+<td>保持顺序的中间插入或删除</td>
+<td>通常 O(n)</td>
+<td>已知前驱节点时修改连接 O(1)</td>
+</tr>
+<tr>
+<td>存储特点</td>
+<td>元素连续</td>
+<td>每个节点还保存连接信息</td>
+</tr>
+</tbody></table>
+<p>链表增删的 O(1) 不包含寻找位置的时间。连续存储通常也有较好的缓存局部性，不能只根据“增删频繁”就认定链表一定更快。</p>
+<h2>10. 运行示例</h2>
+<p>在仓库根目录执行：</p>
+<pre><code class="language-bash">g++ -std=c++17 -Wall -Wextra -pedantic arrays/arrays.cpp -o arrays-demo
+./arrays-demo
+</code></pre>
+<p>示例实际打印数组地址、删除后的有效内容、vector 的增删，以及 reserve 和 resize 的区别。</p>
+<h2>参考资料</h2>
+<ul>
+<li><a href="https://eel.is/c++draft/array.overview">C++ 标准草案：array</a></li>
+<li><a href="https://eel.is/c++draft/vector.overview">C++ 标准草案：vector</a></li>
+<li><a href="https://eel.is/c++draft/vector.capacity">C++ 标准草案：vector 容量</a></li>
+<li><a href="https://learn.microsoft.com/en-us/cpp/standard-library/vector-class?view=msvc-170">Microsoft Learn：vector 类</a></li>
+</ul>
+<p>内容为本项目整理的学习笔记，接口行为可对照上述资料核查。</p>
+
+    </article>
+  </main>
+  <footer class="site-footer">MIT 开源 · <a href="../index.html">返回学习目录</a></footer>
+</body>
+</html>

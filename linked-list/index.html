@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="看懂节点、next、head，以及插入和删除时怎样修改连接。">
+  <title>链表、节点与指针 · 算法理解</title>
+  <link rel="stylesheet" href="../assets/base.css">
+  <link rel="stylesheet" href="../assets/learning.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="site-brand" href="../index.html">算法理解</a>
+    <nav aria-label="项目导航"><a href="../index.html">学习目录</a><a href="https://github.com/TheFayyrr/algorithm-understanding/tree/main/linked-list">本章源码</a></nav>
+  </header>
+  <main class="container">
+    <h1>链表、节点与指针</h1>
+    <p class="intro">看懂节点、next、head，以及插入和删除时怎样修改连接。</p>
+    <article class="learning-notes">
+<p><a href="../index.html">返回学习目录</a> · <a href="index.html">浏览器阅读</a> · <a href="linked_list.cpp">可运行 C++ 示例</a> · <a href="../arrays/index.html">回顾数组</a></p>
+<p>链表的每个节点保存数据和连接信息。链表顺序由连接决定，不要求节点在内存中连续存放。</p>
+<h2>1. 数据域与指针域</h2>
+<pre><code class="language-cpp">struct ListNode {
+    int val;
+    ListNode* next;
+
+    ListNode(int x) : val(x), next(nullptr) {}
+};
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>struct ListNode</code></td>
+<td>定义一种节点类型</td>
+</tr>
+<tr>
+<td><code>int val</code></td>
+<td>当前节点保存的整数</td>
+</tr>
+<tr>
+<td><code>ListNode* next</code></td>
+<td>下一个节点的地址</td>
+</tr>
+<tr>
+<td><code>ListNode(int x)</code></td>
+<td>创建节点时调用的构造函数</td>
+</tr>
+<tr>
+<td><code>: val(x), next(nullptr)</code></td>
+<td>成员初始化列表：数据设为 x，连接设为空</td>
+</tr>
+<tr>
+<td><code>nullptr</code></td>
+<td>C++ 空指针，表示没有指向节点</td>
+</tr>
+</tbody></table>
+<p><code>next</code> 保存地址，不保存下一个节点的完整副本，也不是下一个节点的整数值。</p>
+<h2>2. 节点的逻辑顺序和内存地址</h2>
+<p>假设有以下三个节点，地址仅为示意：</p>
+<table>
+<thead>
+<tr>
+<th>节点地址</th>
+<th>val</th>
+<th>next 保存的地址</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x1000</td>
+<td>10</td>
+<td>0x3000</td>
+</tr>
+<tr>
+<td>0x3000</td>
+<td>20</td>
+<td>0x2000</td>
+</tr>
+<tr>
+<td>0x2000</td>
+<td>30</td>
+<td>nullptr</td>
+</tr>
+</tbody></table>
+<p>从 0x1000 开始沿着 next 访问，读出的顺序是 10、20、30。节点地址的大小顺序不决定链表顺序。</p>
+<p>链表节点可能恰好挨着，也可能分散在不同位置；链表不要求连续存储。</p>
+<h2>3. 单链表、双链表、循环链表</h2>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>节点连接</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单链表</td>
+<td>一个 next</td>
+<td>可以沿连接走向后继</td>
+</tr>
+<tr>
+<td>双链表</td>
+<td>prev 和 next</td>
+<td>可以访问前驱和后继</td>
+</tr>
+<tr>
+<td>循环单链表</td>
+<td>尾节点 next 指向首节点</td>
+<td>遍历不能以遇到 nullptr 为唯一停止条件</td>
+</tr>
+</tbody></table>
+<p>循环链表可以用于循环轮转、约瑟夫环等问题。双链表也可以组织成循环结构。</p>
+<h2>4. head 是什么</h2>
+<pre><code class="language-cpp">ListNode* head = new ListNode(10);
+</code></pre>
+<p><code>head</code> 是一个指针变量，保存首节点的地址。空链表一般用 <code>head == nullptr</code> 表示。</p>
+<p>一些实现还设置一个不保存有效数据的哨兵节点或虚拟头结点。要区分“保存首节点地址的 head 指针”和“额外的头结点”。</p>
+<h2>5. new、箭头、解引用</h2>
+<pre><code class="language-cpp">ListNode* head = new ListNode(10);
+head-&gt;next = new ListNode(20);
+head-&gt;next-&gt;next = new ListNode(30);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>意思</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>new ListNode(10)</code></td>
+<td>动态创建节点，调用构造函数，返回地址</td>
+</tr>
+<tr>
+<td><code>ListNode* head</code></td>
+<td>定义指向 ListNode 的指针</td>
+</tr>
+<tr>
+<td><code>head-&gt;val</code></td>
+<td>访问 head 指向的节点的数据</td>
+</tr>
+<tr>
+<td><code>(*head).val</code></td>
+<td>与 head-&gt;val 等价</td>
+</tr>
+<tr>
+<td><code>head-&gt;next</code></td>
+<td>访问首节点中保存的后继地址</td>
+</tr>
+<tr>
+<td><code>delete p</code></td>
+<td>释放 p 指向的、由匹配 new 创建的节点</td>
+</tr>
+</tbody></table>
+<p>访问 <code>p-&gt;val</code>、<code>p-&gt;next</code> 前，p 必须指向有效节点。delete 后，不可再访问该节点。</p>
+<h2>6. 怎样遍历</h2>
+<pre><code class="language-cpp">ListNode* cur = head;
+
+while (cur != nullptr) {
+    std::cout &lt;&lt; cur-&gt;val &lt;&lt; &#39; &#39;;
+    cur = cur-&gt;next;
+}
+</code></pre>
+<p><code>cur</code> 用来访问节点。<code>cur = cur-&gt;next</code> 表示前进到后继节点。这个操作只改变 cur，不会改变 head。输出需要 <code>&lt;iostream&gt;</code>。</p>
+<h2>7. 删除节点：先接好，再释放</h2>
+<p>已知链表内容为 10、20、30，并且 head 和 head-&gt;next 有效，要删除 20：</p>
+<pre><code class="language-cpp">ListNode* removed = head-&gt;next;
+head-&gt;next = removed-&gt;next;
+delete removed;
+</code></pre>
+<p>先记住 20 节点的地址，让 10 的 next 改为指向 30，再释放 20。其他节点的数据没有搬动。</p>
+<p>不能先 delete 再读取 <code>removed-&gt;next</code>，那是在访问已经释放的内存。</p>
+<p>删除首节点时，要更新 head：</p>
+<pre><code class="language-cpp">if (head != nullptr) {
+    ListNode* removed = head;
+    head = head-&gt;next;
+    delete removed;
+}
+</code></pre>
+<h2>8. 插入节点：先连接后继</h2>
+<p>已知当前内容为 10、30，在 10 后面插入 15：</p>
+<pre><code class="language-cpp">ListNode* node = new ListNode(15);
+node-&gt;next = head-&gt;next;
+head-&gt;next = node;
+</code></pre>
+<p>先让 15 指向原来的后继 30，再让 10 指向 15。若先覆盖 head-&gt;next，又没有保存原来的后继，就可能丢失后面的链。</p>
+<h2>9. 释放完整链表</h2>
+<pre><code class="language-cpp">while (head != nullptr) {
+    ListNode* next = head-&gt;next;
+    delete head;
+    head = next;
+}
+</code></pre>
+<p>这些操作适用于以 nullptr 结束的非循环链表。循环链表需要不同的结束条件。</p>
+<p>使用 <code>std::list</code> 和 <code>std::forward_list</code> 时，容器负责其节点的释放，不需要自己对容器元素调用 delete。</p>
+<h2>10. 构造函数与 C 定义的易错点</h2>
+<p>上面的 C++ 结构自定义了有参构造函数，所以可以写 <code>new ListNode(5)</code>。它没有无参构造函数，不能直接使用 <code>new ListNode()</code>。</p>
+<p>如果改成没有自定义构造函数的结构：</p>
+<pre><code class="language-cpp">struct PlainNode {
+    int val;
+    PlainNode* next;
+};
+
+PlainNode* a = new PlainNode{5, nullptr}; // 直接初始化两个成员
+PlainNode* b = new PlainNode();          // val 为 0，next 为空
+PlainNode* c = new PlainNode;            // 不保证成员有这些初值
+
+delete a;
+delete b;
+delete c;
+</code></pre>
+<p>上述 new PlainNode() 的结论针对这里没有自定义构造函数、没有成员初始化器的结构。不能把所有自定义构造函数的行为都概括成这一种情况。</p>
+<p>C 语言的节点定义应写成：</p>
+<pre><code class="language-c">typedef struct ListNodeT {
+    int val;
+    struct ListNodeT* next;
+} ListNode;
+</code></pre>
+<p><code>struct ListNodeT next;</code> 少了星号，会要求在节点内部放一个完整的同类节点，结构无法形成有限大小。C 没有 C++ 构造函数，使用 malloc 后要自行初始化，并用 free 释放；new/delete 和 malloc/free 不可随意混配。</p>
+<h2>11. 增删到底是不是 O(1)</h2>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>单链表时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>已知前驱节点，在它后面插入一个节点</td>
+<td>修改连接 O(1)</td>
+</tr>
+<tr>
+<td>已知前驱节点，删除它的后继</td>
+<td>修改连接 O(1)</td>
+</tr>
+<tr>
+<td>从 head 查找第 i 个节点</td>
+<td>O(n)</td>
+</tr>
+<tr>
+<td>从 head 查找一个值</td>
+<td>O(n)</td>
+</tr>
+<tr>
+<td>先找到第五个节点再删除</td>
+<td>整体通常 O(n)</td>
+</tr>
+</tbody></table>
+<p>O(1) 不包含寻找位置的时间。节点分配和释放也有实际开销，不能只看指针赋值次数就断定链表一定比数组快。</p>
+<h2>12. 标准库链表常用接口</h2>
+<pre><code class="language-cpp">#include &lt;list&gt;
+#include &lt;forward_list&gt;
+
+std::list&lt;int&gt; a{10, 20, 30};
+std::forward_list&lt;int&gt; b{10, 20, 30};
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>std::list 接口</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>push_front(x)</code> / <code>push_back(x)</code></td>
+<td>头部／尾部添加</td>
+</tr>
+<tr>
+<td><code>pop_front()</code> / <code>pop_back()</code></td>
+<td>删除头部／尾部，要求非空</td>
+</tr>
+<tr>
+<td><code>front()</code> / <code>back()</code></td>
+<td>访问头部／尾部，要求非空</td>
+</tr>
+<tr>
+<td><code>insert(it, x)</code></td>
+<td>在 it 指向的位置之前插入</td>
+</tr>
+<tr>
+<td><code>erase(it)</code></td>
+<td>删除 it 指向的一个元素</td>
+</tr>
+<tr>
+<td><code>remove(x)</code></td>
+<td>删除所有值等于 x 的元素</td>
+</tr>
+<tr>
+<td><code>size()</code> / <code>empty()</code> / <code>clear()</code></td>
+<td>数量／判空／清空</td>
+</tr>
+<tr>
+<td><code>begin()</code> / <code>end()</code></td>
+<td>遍历所需的起点与终点</td>
+</tr>
+<tr>
+<td><code>sort()</code> / <code>reverse()</code></td>
+<td>排序／反转</td>
+</tr>
+</tbody></table>
+<p>它们没有 <code>a[i]</code> 或 at() 这样的随机访问接口。<code>std::sort</code> 要求随机访问迭代器，不能直接用来排序 list；使用 <code>a.sort()</code>。</p>
+<p>forward_list 用 <code>insert_after()</code>、<code>erase_after()</code> 操作指定位置后面的节点；<code>before_begin()</code> 表示首元素之前的位置。它没有 size()、back()、push_back()、pop_back()。</p>
+<h2>13. 运行示例</h2>
+<pre><code class="language-bash">g++ -std=c++17 -Wall -Wextra -pedantic linked-list/linked_list.cpp -o linked-list-demo
+./linked-list-demo
+</code></pre>
+<p>示例包含创建、遍历、删除中间节点、插入节点、更新首节点、释放链表，以及 list/forward_list 的操作。</p>
+<h2>参考资料</h2>
+<ul>
+<li><a href="https://eel.is/c++draft/list.overview">C++ 标准草案：list</a></li>
+<li><a href="https://eel.is/c++draft/forward.list.overview">C++ 标准草案：forward_list</a></li>
+<li><a href="https://eel.is/c++draft/dcl.init">C++ 标准草案：初始化规则</a></li>
+</ul>
+<p>内容为本项目整理的学习笔记。</p>
+
+    </article>
+  </main>
+  <footer class="site-footer">MIT 开源 · <a href="../index.html">返回学习目录</a></footer>
+</body>
+</html>

@@ -1,0 +1,23 @@
+#mq-lesson { color: var(--foreground); }
+    #mq-lesson .mq-meta { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; margin: .9rem 0; }
+    #mq-lesson .mq-array { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 2px; }
+    #mq-lesson .mq-cell { display: flex; flex-direction: column; align-items: center; padding: .45rem 0; gap: .35rem; min-width: 0; transition: background 500ms ease; }
+    #mq-lesson .mq-cell.in-window { background: color-mix(in srgb, var(--viz-series-1) 15%, transparent); }
+    #mq-lesson .mq-cell.incoming { background: color-mix(in srgb, var(--viz-series-1) 28%, transparent); }
+    #mq-lesson .mq-index { color: var(--muted-foreground); }
+    #mq-lesson .mq-pointer { min-height: 1.3em; }
+    #mq-lesson .mq-window-rail { position: relative; height: .65rem; margin-top: .25rem; }
+    #mq-lesson .mq-window-band { position: absolute; top: 0; height: 4px; background: var(--viz-series-1); transition: left 600ms ease, width 600ms ease; }
+    #mq-lesson .mq-queue-label { margin: 1.1rem 0 .45rem; }
+    #mq-lesson .mq-queue { position: relative; min-height: 6.3em; }
+    #mq-lesson .mq-node { position: absolute; top: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; padding: .5rem 0; background: color-mix(in srgb, var(--viz-series-1) 14%, transparent); transition: left 600ms ease, transform 550ms ease, opacity 550ms ease; }
+    #mq-lesson .mq-node.marked { background: color-mix(in srgb, var(--viz-series-2) 22%, transparent); }
+    #mq-lesson .mq-node.leaving { opacity: 0; transform: translateY(18px); }
+    #mq-lesson .mq-empty { color: var(--muted-foreground); padding: .7rem 0; }
+    #mq-lesson .mq-detail { min-height: 2.6em; margin: .4rem 0 .7rem; overflow-wrap: anywhere; }
+    #mq-lesson .mq-result { margin: .5rem 0 1rem; overflow-wrap: anywhere; }
+    #mq-lesson .mq-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+    #mq-lesson .mq-count { margin-left: .3rem; }
+    @media (prefers-reduced-motion: reduce) {
+      #mq-lesson .mq-cell, #mq-lesson .mq-node, #mq-lesson .mq-window-band { transition: none; }
+    }
